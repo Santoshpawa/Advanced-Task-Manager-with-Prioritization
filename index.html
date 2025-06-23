@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+        }
+
+        .taskContainer {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 40px 40px;
+        }
+
+        .taskCard {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            border: 1px solid;
+            border-radius: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="root"></div>
+</body>
+
+</html>
+<script type="text/babel">
+    const { useState } = React;
+
+    function TaskCard({ id, title, priority, completed, completeTask, deleteTask }) {
+        const taskCompleted = (e) => {
+
+        }
+
+        return (
+            <div className="taskCard">
+
+                <p style={{ textDecoration: completed ? "line-through" : "none" }}>{title}</p>
+                <p>{priority}</p>
+                {!completed && <button onClick={() => completeTask(id)} >Completed</button>}
+                <button onClick={() => deleteTask(id)}>Delete</button>
+            </div>
+        )
+    }
+
+    function TaskManager() {
+        const [tasks, setTasks] = useState([]);
+        const [task, setTask] = useState({
+            title: '',
+            priority: '',
+        })
+        const [sortOrder, setSortOrder] = useState('old-to-new');
+        const [priorityFilter, setPriorityFilter] = useState('');
+        const [statusFilter, setStatusFilter] = useState('');
+
+        const newTask = (e) => {
+            setTask({ ...task, [e.target.name]: e.target.value });
+        }
+        const handleTask = (e) => {
+            const newTask = { ...task, id: Date.now(), completed: false }
+            setTasks([...tasks, newTask]);
+            setTask({
+                title: '',
+                priority: ''
+            })
+        }
+
+
+        //completing the task
+        const completeTaskById = (id) => {
+            const tasksAfterCompletion = tasks.map((task) => {
+                if (task.id == id) {
+                    task.completed = true;
+                    return task;
+                } else {
+                    return task;
+                }
+            })
+            setTasks(tasksAfterCompletion);
+        }
+
+        // deleting the task
+        const deleteTaskById = (id) => {
+            const taskAfterDeletion = tasks.filter((task) => task.id !== id);
+            setTasks(taskAfterDeletion);
+        }
+
+
+        // filtering and sorting the tasks
+
+        const filteringandsorting = () => {
+
+            //filtering
+            let filteredTasks = tasks.filter((task) => {
+                const filterByPriority = !priorityFilter || task.priority == priorityFilter;
+                const filterByStatus = !statusFilter || (statusFilter == "completed" && task.completed)
+                    || (statusFilter == "incomplete" && !task.completed);
+
+                return filterByPriority && filterByStatus;
+            })
+
+            //sorting
+            filteredTasks.sort((a, b) => {
+                if (sortOrder == 'old-to-new') {
+                    return a.id - b.id;
+                } else {
+                    return b.id - a.id;
+                }
+            })
+            return filteredTasks;
+        }
+
+
+        return (
+            <div>
+                <h1>Advanced Task Manager</h1>
+                <div className="addTask">
+                    <input
+                        type="text"
+                        name="title"
+                        value={task.title}
+                        onChange={newTask}
+                        placeholder="Enter Task"
+                    />
+                    <p>Priority</p>
+                    <select onChange={newTask} name="priority" value={task.priority}>
+                        <option value="">Select an option</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+
+                    </select>
+                    <button onClick={handleTask}>Add Task</button>
+                </div>
+                <hr />
+
+                <div className="filter&sortContainer">
+                    <h2>Sort Tasks:</h2>
+                    <select name="" id="" onChange={(e) => setSortOrder(e.target.value)} >
+                        <option value="old-to-new">Old to New</option>
+                        <option value="new-to-old">New to Old</option>
+                    </select>
+                    <h2>Filter Tasks:</h2>
+                    <select name="" id="" onChange={(e) => setPriorityFilter(e.target.value)}>
+                        <option value="">Priority(none)</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                    <select name="" id="" onChange={(e) => setStatusFilter(e.target.value)}>
+                        <option value="">All</option>
+                        <option value="completed">Complete</option>
+                        <option value="incomplete">Incomplete</option>
+                    </select>
+                </div>
+                <hr />
+                <div className="taskContainer">
+
+                    {filteringandsorting().map((task) => (
+                        <TaskCard {...task} completeTask={completeTaskById} deleteTask={deleteTaskById} />
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root')).render(<TaskManager />)
+</script>
